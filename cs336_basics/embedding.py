@@ -12,3 +12,6 @@ class Embedding(nn.Module):
 
     def forward(self, token_ids: Int[Tensor, " ..."]):
         return self.weight[token_ids]
+    
+    def init_weights(self, w: Float[Tensor, "vocab_size d_model"]):
+        self.weight.data.copy_(w)

@@ -12,6 +12,7 @@ from torch import Tensor
 from cs336_basics.linear import Linear
 from cs336_basics.embedding import Embedding
 from cs336_basics.activations import Swiglu
+from cs336_basics.attention import scaled_dot_product_attention, MultiHeadSelfAttention
 
 def run_linear(
     d_in: int,
@@ -32,7 +33,7 @@ def run_linear(
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
     model = Linear(d_in, d_out)
-    model.weight.data.copy_(weights)
+    model.init_weights(weights)
     output = model(in_features)
     return output
 
@@ -57,7 +58,7 @@ def run_embedding(
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
     model = Embedding(vocab_size, d_model)
-    model.weight.data.copy_(weights)
+    model.init_weights(weights)
     output = model(token_ids)
     return output
 
@@ -117,7 +118,14 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    raise NotImplementedError
+    '''
+        Q:    torch.Size([4, 12, 64])     [batch_size, q_len, dim]
+        K:    torch.Size([4, 16, 64])     [batch_size, k_len, dim]
+        V:    torch.Size([4, 16, 64])     [batch_size, v_len, dim]
+        mask: torch.Size([4, 12, 16])
+    '''
+    # [batch_size, q_len, dim]
+    return scaled_dot_product_attention(Q, K, V, mask)
 
 
 def run_multihead_self_attention(
@@ -151,7 +159,17 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    # print(q_proj_weight.shape)
+    # print(k_proj_weight.shape)
+    # print(v_proj_weight.shape)
+    # print(o_proj_weight.shape)
+    # print("d_model: ", d_model)
+    # print("num_heads: ", num_heads)
+    model = MultiHeadSelfAttention(d_model=d_model, num_heads=num_heads)
+    model.init_werights(q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight)
+    output = model(in_features)
+    return output
+
 
 
 def run_multihead_self_attention_with_rope(

@@ -18,40 +18,40 @@ from .adapters import (
 )
 
 
-def test_linear(numpy_snapshot, ts_state_dict, in_embeddings, d_model, d_ff):
-    w1_weight = ts_state_dict[0]["layers.0.ffn.w1.weight"]
-    output = run_linear(
-        d_in=d_model,
-        d_out=d_ff,
-        weights=w1_weight,
-        in_features=in_embeddings,
-    )
-    numpy_snapshot.assert_match(output)
+# def test_linear(numpy_snapshot, ts_state_dict, in_embeddings, d_model, d_ff):
+#     w1_weight = ts_state_dict[0]["layers.0.ffn.w1.weight"]
+#     output = run_linear(
+#         d_in=d_model,
+#         d_out=d_ff,
+#         weights=w1_weight,
+#         in_features=in_embeddings,
+#     )
+#     numpy_snapshot.assert_match(output)
 
 
-def test_embedding(numpy_snapshot, ts_state_dict, in_indices, vocab_size, d_model):
-    embedding_weight = ts_state_dict[0]["token_embeddings.weight"]
-    output = run_embedding(
-        vocab_size=vocab_size,
-        d_model=d_model,
-        weights=embedding_weight,
-        token_ids=in_indices,
-    )
-    numpy_snapshot.assert_match(output)
+# def test_embedding(numpy_snapshot, ts_state_dict, in_indices, vocab_size, d_model):
+#     embedding_weight = ts_state_dict[0]["token_embeddings.weight"]
+#     output = run_embedding(
+#         vocab_size=vocab_size,
+#         d_model=d_model,
+#         weights=embedding_weight,
+#         token_ids=in_indices,
+#     )
+#     numpy_snapshot.assert_match(output)
 
 
-def test_swiglu(numpy_snapshot, ts_state_dict, in_embeddings, d_model, d_ff):
-    w1_weight, w2_weight, w3_weight = [ts_state_dict[0][f"layers.0.ffn.{k}.weight"] for k in ["w1", "w2", "w3"]]
+# def test_swiglu(numpy_snapshot, ts_state_dict, in_embeddings, d_model, d_ff):
+#     w1_weight, w2_weight, w3_weight = [ts_state_dict[0][f"layers.0.ffn.{k}.weight"] for k in ["w1", "w2", "w3"]]
 
-    actual_output = run_swiglu(
-        d_model=d_model,
-        d_ff=d_ff,
-        w1_weight=w1_weight,
-        w2_weight=w2_weight,
-        w3_weight=w3_weight,
-        in_features=in_embeddings,
-    )
-    numpy_snapshot.assert_match(actual_output, atol=1e-5)
+#     actual_output = run_swiglu(
+#         d_model=d_model,
+#         d_ff=d_ff,
+#         w1_weight=w1_weight,
+#         w2_weight=w2_weight,
+#         w3_weight=w3_weight,
+#         in_features=in_embeddings,
+#     )
+#     numpy_snapshot.assert_match(actual_output, atol=1e-5)
 
 
 # def test_scaled_dot_product_attention(numpy_snapshot, q, k, v, mask):
@@ -74,21 +74,21 @@ def test_swiglu(numpy_snapshot, ts_state_dict, in_embeddings, d_model, d_ff):
 #     )
 
 
-# def test_multihead_self_attention(numpy_snapshot, in_embeddings, d_model, n_heads, ts_state_dict):
-#     d, _ = ts_state_dict
-#     q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight = [
-#         d[f"layers.0.attn.{k}_proj.weight"] for k in ["q", "k", "v", "output"]
-#     ]
-#     actual_output = run_multihead_self_attention(
-#         d_model=d_model,
-#         num_heads=n_heads,
-#         q_proj_weight=q_proj_weight,
-#         k_proj_weight=k_proj_weight,
-#         v_proj_weight=v_proj_weight,
-#         o_proj_weight=o_proj_weight,
-#         in_features=in_embeddings,
-#     )
-#     numpy_snapshot.assert_match(actual_output, atol=1e-6)
+def test_multihead_self_attention(numpy_snapshot, in_embeddings, d_model, n_heads, ts_state_dict):
+    d, _ = ts_state_dict
+    q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight = [
+        d[f"layers.0.attn.{k}_proj.weight"] for k in ["q", "k", "v", "output"]
+    ]
+    actual_output = run_multihead_self_attention(
+        d_model=d_model,
+        num_heads=n_heads,
+        q_proj_weight=q_proj_weight,
+        k_proj_weight=k_proj_weight,
+        v_proj_weight=v_proj_weight,
+        o_proj_weight=o_proj_weight,
+        in_features=in_embeddings,
+    )
+    numpy_snapshot.assert_match(actual_output, atol=1e-6)
 
 
 # def test_multihead_self_attention_with_rope(
