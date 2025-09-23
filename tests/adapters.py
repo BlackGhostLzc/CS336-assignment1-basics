@@ -13,6 +13,7 @@ from cs336_basics.linear import Linear
 from cs336_basics.embedding import Embedding
 from cs336_basics.activations import Swiglu
 from cs336_basics.attention import scaled_dot_product_attention, MultiHeadSelfAttention
+from cs336_basics.rope import Rope
 
 def run_linear(
     d_in: int,
@@ -159,12 +160,6 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    # print(q_proj_weight.shape)
-    # print(k_proj_weight.shape)
-    # print(v_proj_weight.shape)
-    # print(o_proj_weight.shape)
-    # print("d_model: ", d_model)
-    # print("num_heads: ", num_heads)
     model = MultiHeadSelfAttention(d_model=d_model, num_heads=num_heads)
     model.init_werights(q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight)
     output = model(in_features)
@@ -209,7 +204,12 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    model = MultiHeadSelfAttention(d_model=d_model, num_heads=num_heads, use_rope=True, 
+                                   max_seq_len=max_seq_len, theta=theta, token_positions=token_positions)
+    model.init_werights(q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight)
+    output = model(in_features)
+    return output
+
 
 
 def run_rope(
@@ -231,7 +231,10 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    raise NotImplementedError
+    model = Rope(d_k=d_k, max_seq_len=max_seq_len, theta=theta, token_positions=token_positions)
+    output = model(in_query_or_key)
+    return output
+
 
 
 def run_transformer_block(

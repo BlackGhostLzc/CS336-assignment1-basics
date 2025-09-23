@@ -74,44 +74,44 @@ from .adapters import (
 #     )
 
 
-def test_multihead_self_attention(numpy_snapshot, in_embeddings, d_model, n_heads, ts_state_dict):
-    d, _ = ts_state_dict
-    q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight = [
-        d[f"layers.0.attn.{k}_proj.weight"] for k in ["q", "k", "v", "output"]
-    ]
-    actual_output = run_multihead_self_attention(
-        d_model=d_model,
-        num_heads=n_heads,
-        q_proj_weight=q_proj_weight,
-        k_proj_weight=k_proj_weight,
-        v_proj_weight=v_proj_weight,
-        o_proj_weight=o_proj_weight,
-        in_features=in_embeddings,
-    )
-    numpy_snapshot.assert_match(actual_output, atol=1e-6)
-
-
-# def test_multihead_self_attention_with_rope(
-#     numpy_snapshot, in_embeddings, d_model, n_heads, ts_state_dict, n_keys, theta, pos_ids
-# ):
+# def test_multihead_self_attention(numpy_snapshot, in_embeddings, d_model, n_heads, ts_state_dict):
 #     d, _ = ts_state_dict
 #     q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight = [
 #         d[f"layers.0.attn.{k}_proj.weight"] for k in ["q", "k", "v", "output"]
 #     ]
-#     pos_ids = rearrange(pos_ids, "seq -> 1 seq")
-#     actual_output = run_multihead_self_attention_with_rope(
+#     actual_output = run_multihead_self_attention(
 #         d_model=d_model,
 #         num_heads=n_heads,
-#         max_seq_len=n_keys,
-#         theta=theta,
 #         q_proj_weight=q_proj_weight,
 #         k_proj_weight=k_proj_weight,
 #         v_proj_weight=v_proj_weight,
 #         o_proj_weight=o_proj_weight,
 #         in_features=in_embeddings,
-#         token_positions=pos_ids,
 #     )
 #     numpy_snapshot.assert_match(actual_output, atol=1e-6)
+
+
+def test_multihead_self_attention_with_rope(
+    numpy_snapshot, in_embeddings, d_model, n_heads, ts_state_dict, n_keys, theta, pos_ids
+):
+    d, _ = ts_state_dict
+    q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight = [
+        d[f"layers.0.attn.{k}_proj.weight"] for k in ["q", "k", "v", "output"]
+    ]
+    pos_ids = rearrange(pos_ids, "seq -> 1 seq")
+    actual_output = run_multihead_self_attention_with_rope(
+        d_model=d_model,
+        num_heads=n_heads,
+        max_seq_len=n_keys,
+        theta=theta,
+        q_proj_weight=q_proj_weight,
+        k_proj_weight=k_proj_weight,
+        v_proj_weight=v_proj_weight,
+        o_proj_weight=o_proj_weight,
+        in_features=in_embeddings,
+        token_positions=pos_ids,
+    )
+    numpy_snapshot.assert_match(actual_output, atol=1e-6)
 
 
 # def test_transformer_lm(
@@ -183,11 +183,11 @@ def test_multihead_self_attention(numpy_snapshot, in_embeddings, d_model, n_head
 #     numpy_snapshot.assert_match(actual_output, atol=1e-6)
 
 
-# def test_rope(numpy_snapshot, in_embeddings, d_model, theta, n_queries, pos_ids):
-#     output = run_rope(
-#         d_model, theta=theta, max_seq_len=n_queries, in_query_or_key=in_embeddings, token_positions=pos_ids
-#     )
-#     numpy_snapshot.assert_match(output, atol=1e-6)
+def test_rope(numpy_snapshot, in_embeddings, d_model, theta, n_queries, pos_ids):
+    output = run_rope(
+        d_model, theta=theta, max_seq_len=n_queries, in_query_or_key=in_embeddings, token_positions=pos_ids
+    )
+    numpy_snapshot.assert_match(output, atol=1e-6)
 
 
 # def test_silu_matches_pytorch():
