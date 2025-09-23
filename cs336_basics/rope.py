@@ -6,7 +6,7 @@ from .linear import Linear
 import math
 
 class Rope(nn.Module):
-    def __init__(self, d_k, max_seq_len, theta, token_positions):
+    def __init__(self, d_k, max_seq_len, theta):
         super().__init__()
         assert d_k % 2 == 0, "In Rope, d_k must be an even number"
 
@@ -30,11 +30,9 @@ class Rope(nn.Module):
         self.register_buffer("sin", sin)
         self.register_buffer("cos", cos)
 
-        self.token_positions = token_positions
-
 
     
-    def forward(self, x):
+    def forward(self, x, token_positions: None):
         '''
             x: [... sequence_length d_k]，比如说 [... num_heads, seq_len, head_dim]
         '''
@@ -64,8 +62,13 @@ class Rope(nn.Module):
         # 逐元素相乘
         # cosMatrix = self.cos[:seq_len, :]
         # sinMatrix = self.sin[:seq_len, :]
-        cosMatrix = self.cos[self.token_positions]
-        sinMatrix = self.sin[self.token_positions]
+        if token_positions is not None:
+            cosMatrix = self.cos[token_positions]
+            sinMatrix = self.sin[token_positions]
+        else: 
+            cosMatrix = self.cos[:seq_len, :]
+            sinMatrix = self.sin[:seq_len, :]
+
         o0 = x0 * cosMatrix - x1 * sinMatrix 
         o1 = x1 * cosMatrix + x0 * sinMatrix
 

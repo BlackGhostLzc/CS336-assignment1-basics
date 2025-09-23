@@ -4,6 +4,17 @@ from torch import Tensor
 from jaxtyping import Bool, Float, Int
 from .linear import Linear
 
+
+def sigmoid(x):
+    o = 1/(1 + torch.exp(-x))  
+    return o
+
+
+def Silu(x):
+    return x * torch.sigmoid(x)
+
+
+
 class Swiglu(nn.Module):
     def __init__(self, d_model, d_ff):
         super().__init__()
@@ -22,7 +33,7 @@ class Swiglu(nn.Module):
     def forward(self, in_features: Float[Tensor, " ... d_model"]):
         u = self.up_proj(in_features)
         g = self.gated(in_features)
-        o = (u * torch.sigmoid(u)) * g
+        o = (Silu(u)) * g
         return self.down_proj(o)
     
     def init_weights(self, w1: Float[Tensor, " d_ff d_model"], 
@@ -31,3 +42,5 @@ class Swiglu(nn.Module):
         self.up_proj.init_weights(w1)
         self.down_proj.init_weights(w2)
         self.gated.init_weights(w3)
+
+

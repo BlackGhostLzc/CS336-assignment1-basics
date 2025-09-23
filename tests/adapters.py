@@ -11,9 +11,11 @@ from torch import Tensor
 
 from cs336_basics.linear import Linear
 from cs336_basics.embedding import Embedding
-from cs336_basics.activations import Swiglu
+from cs336_basics.activations import Swiglu, Silu
 from cs336_basics.attention import scaled_dot_product_attention, MultiHeadSelfAttention
 from cs336_basics.rope import Rope
+from cs336_basics.rmsnorm import RMSNorm
+from cs336_basics.transformer import TransformerBlock
 
 def run_linear(
     d_in: int,
@@ -231,8 +233,8 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    model = Rope(d_k=d_k, max_seq_len=max_seq_len, theta=theta, token_positions=token_positions)
-    output = model(in_query_or_key)
+    model = Rope(d_k=d_k, max_seq_len=max_seq_len, theta=theta)
+    output = model(in_query_or_key, token_positions)
     return output
 
 
@@ -307,7 +309,13 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    raise NotImplementedError
+    print(in_features.shape)
+    model = TransformerBlock(d_model, num_heads, d_ff, max_seq_len, theta)
+    model.init_weights(weights)
+    output = model(in_features)
+    print(output.shape)
+    return output
+
 
 
 def run_transformer_lm(
@@ -412,7 +420,11 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    raise NotImplementedError
+    model = RMSNorm(d_model, eps)
+    model.init_weights(weights)
+    output = model(in_features)
+    return output
+
 
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
@@ -426,7 +438,8 @@ def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
         Float[Tensor,"..."]: of with the same shape as `in_features` with the output of applying
         SiLU to each element.
     """
-    raise NotImplementedError
+    output = Silu(in_features)
+    return output
 
 
 def run_get_batch(

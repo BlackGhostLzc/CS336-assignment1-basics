@@ -42,7 +42,7 @@ class MultiHeadSelfAttention(nn.Module):
         self.WO = Linear(self.d_model, self.d_model)
 
         if use_rope == True:
-            self.rope = Rope(d_k=self.head_dim, max_seq_len=max_seq_len, theta=theta, token_positions=token_positions)
+            self.rope = Rope(d_k=self.head_dim, max_seq_len=max_seq_len, theta=theta)
         
         self.use_rope = use_rope
         self.max_seq_len = max_seq_len
@@ -72,8 +72,8 @@ class MultiHeadSelfAttention(nn.Module):
         mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
 
         if self.use_rope == True:
-            q_proj = self.rope(q_proj)
-            k_proj = self.rope(k_proj)
+            q_proj = self.rope(q_proj, self.token_positions)
+            k_proj = self.rope(k_proj, self.token_positions)
 
         output = scaled_dot_product_attention(q_proj, k_proj, v_proj, ~mask)    # [.... , num_heads, seq_len, d] 
         output = output.transpose(-2, -3)  # [.... ,  seq_len, num_heads, d]
