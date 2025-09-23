@@ -15,7 +15,7 @@ from cs336_basics.activations import Swiglu, Silu
 from cs336_basics.attention import scaled_dot_product_attention, MultiHeadSelfAttention
 from cs336_basics.rope import Rope
 from cs336_basics.rmsnorm import RMSNorm
-from cs336_basics.transformer import TransformerBlock
+from cs336_basics.transformer import TransformerBlock, TransformerLM
 
 def run_linear(
     d_in: int,
@@ -163,7 +163,7 @@ def run_multihead_self_attention(
         implementation with the given QKV projection weights and input features.
     """
     model = MultiHeadSelfAttention(d_model=d_model, num_heads=num_heads)
-    model.init_werights(q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight)
+    model.init_weights(q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight)
     output = model(in_features)
     return output
 
@@ -208,7 +208,7 @@ def run_multihead_self_attention_with_rope(
     """
     model = MultiHeadSelfAttention(d_model=d_model, num_heads=num_heads, use_rope=True, 
                                    max_seq_len=max_seq_len, theta=theta, token_positions=token_positions)
-    model.init_werights(q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight)
+    model.init_weights(q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight)
     output = model(in_features)
     return output
 
@@ -309,11 +309,9 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    print(in_features.shape)
     model = TransformerBlock(d_model, num_heads, d_ff, max_seq_len, theta)
     model.init_weights(weights)
     output = model(in_features)
-    print(output.shape)
     return output
 
 
@@ -397,7 +395,11 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    model = TransformerLM(vocab_size, context_length, d_model, num_layers,
+                          num_heads, d_ff, rope_theta)
+    model.init_weights(weights)
+    output = model(in_indices)
+    return output
 
 
 def run_rmsnorm(

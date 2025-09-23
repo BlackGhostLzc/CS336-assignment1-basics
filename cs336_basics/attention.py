@@ -84,7 +84,7 @@ class MultiHeadSelfAttention(nn.Module):
 
 
 
-    def init_werights(self, q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight):
+    def init_weights(self, q_proj_weight, k_proj_weight, v_proj_weight, o_proj_weight):
         self.WQ.init_weights(q_proj_weight)
         self.WK.init_weights(k_proj_weight)
         self.WV.init_weights(v_proj_weight)
