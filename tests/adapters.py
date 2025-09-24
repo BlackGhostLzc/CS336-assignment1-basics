@@ -19,6 +19,8 @@ from cs336_basics.transformer import TransformerBlock, TransformerLM
 
 from cs336_basics.utils import softmax, cross_entropy
 
+from cs336_basics.tokenizer import train_bpe_tokenizer
+
 def run_linear(
     d_in: int,
     d_out: int,
@@ -642,4 +644,5 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    raise NotImplementedError
+    vocab, merges = train_bpe_tokenizer(input_path, vocab_size, special_tokens)
+    return vocab, merges
