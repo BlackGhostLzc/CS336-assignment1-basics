@@ -153,54 +153,56 @@ def train_bpe_tokenizer(
 
 
 
-def remove_special_tokens(text, special_tokens: list[str]):
-     # --- 步骤 1: 构建一个安全的分隔符正则表达式 ---
-    # 对每个特殊词元使用 re.escape()，以防其中包含正则特殊字符（如 '[', ']', '|')
-    escaped_special_tokens = [re.escape(token) for token in special_tokens]
-    
-    # 使用 "|" 将所有转义后的特殊词元连接起来，创建一个“或”模式的正则表达式
-    delimiter_pattern = "|".join(escaped_special_tokens)
-
-    # re.split 会根据分隔符将文本切分成一个列表，分隔符本身会被移除
-    text_chunks = re.split(f'({delimiter_pattern})', text)
-    result = [chunk for chunk in text_chunks if chunk and chunk not in special_tokens]
-
-    result = "".join(result) # 使用空字符串 "" 连接
-    return result
+# CHANGE 1: 这是一个新的辅助函数，用于正确地按特殊符号切分文本
+def split_by_special_tokens(text, special_tokens):
+    """
+    使用特殊符号切分文本，但保留特殊符号作为独立的块。
+    """
+    special_pattern = "|".join(re.escape(token) for token in special_tokens)
+    # 使用 capturing group (...) 来在切分结果中保留分隔符
+    chunks = re.split(f'({special_pattern})', text)
+    # 过滤掉 re.split 可能产生的空字符串
+    return [chunk for chunk in chunks if chunk]
 
 
 def pre_tokenization(text, vocab2idx):
     PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
-    iter = re.finditer(PAT, text)
+    # 使用 regex.finditer
+    str_tokens = [match.group() for match in re.finditer(PAT, text)]
 
-    result = []
-    for item in iter:
-        # 迭代器中的每一项都是一个“匹配对象” (Match Object)
-        # 需要调用 .group() 或 .group(0) 方法来获取它所代表的字符串
-        token = item.group()
-        token_bytes = token.encode('utf-8')
-
-        pretoken_ids = []
-        for byte in token_bytes:
-            pretoken_ids.append(vocab2idx[bytes([byte])])
-
-        result.append(pretoken_ids)
-    # [[1,2..], ]
+    # 使用嵌套的列表推导式，代码更简洁
+    result = [
+        [vocab2idx[bytes([byte_val])] for byte_val in token.encode('utf-8')]
+        for token in str_tokens
+    ]
     return result
 
 
-
+# CHANGE 2: 重写 worker 函数，采用正确的策略
 def worker(text, vocab2idx, queue: multiprocessing.Queue, special_tokens: list[str]):
-    '''
-        text 是一段文本， 需要把预分好词后的文本放入queue中供主进程进行计数和合并
-        vocab2idx: bytes -> int
-    '''
-    # 1. 首先要去除特殊符号
-    text = remove_special_tokens(text, special_tokens)
-    # 2. 预分词，result[i]单独进行计数，result[i]是一个词元token
-    result = pre_tokenization(text, vocab2idx)
-    # 3. 加入共享队列, [[1,2..], [3,4..], [5,6..]]
-    queue.put(result)
+    """
+    修正后的 worker 函数：不再移除特殊符号，而是用它们来切分文本并分别处理。
+    """
+    all_pretoken_ids = []
+    
+    # 1. 使用特殊符号进行切分，但保留它们
+    text_chunks = split_by_special_tokens(text, special_tokens)
+    
+    # 2. 遍历所有切分块
+    for chunk in text_chunks:
+        if chunk in special_tokens:
+            # 2a. 如果这个块是特殊符号，它本身就是一个完整的词元
+            special_token_bytes = chunk.encode('utf--8')
+            if special_token_bytes in vocab2idx:
+                special_token_id = vocab2idx[special_token_bytes]
+                all_pretoken_ids.append([special_token_id])
+        else:
+            # 2b. 如果是普通文本，对其进行预分词
+            pretoken_ids_list = pre_tokenization(chunk, vocab2idx)
+            all_pretoken_ids.extend(pretoken_ids_list)
+            
+    # 3. 将最终处理好的、结构正确的ID列表放入队列
+    queue.put(all_pretoken_ids)
 
 
 
