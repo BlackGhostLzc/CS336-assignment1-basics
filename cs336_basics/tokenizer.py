@@ -122,7 +122,7 @@ def train_bpe_tokenizer(
     # 计算好了所有的pair对的计数，然后就开始记录需要添加哪个词汇表，然后再做出merge
     for i in range(merge_epoch):
         # 1.找出最大的 pair 对
-        top_pair = find_top_pair(pair_counts)
+        top_pair = find_top_pair(pair_counts, vocab)
         
         id1, id2 = top_pair
         # print("合并的id是 ", id1, id2)
@@ -204,7 +204,7 @@ def worker(text, vocab2idx, queue: multiprocessing.Queue, special_tokens: list[s
 
 
 
-def find_top_pair(pair_counts):
+def find_top_pair(pair_counts, vocab):
     """
         从频率字典中找出计数最高的词对。
         pair_counts (dict): 格式为 {(token1, token2): count} 的字典。
@@ -213,7 +213,7 @@ def find_top_pair(pair_counts):
     # 使用 max 函数和 key 参数可以高效地找到值最大的键，还有字典序比较
     return max(
         pair_counts, 
-        key=lambda pair: (pair_counts[pair], pair[0], pair[1])
+        key=lambda pair: (pair_counts[pair], vocab[pair[0]], vocab[pair[1]])
     )
 
 
