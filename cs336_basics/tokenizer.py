@@ -161,7 +161,10 @@ def split_by_special_tokens(text, special_tokens):
     if not special_tokens:
         return [text]
     
-    special_pattern = "|".join(re.escape(token) for token in special_tokens)
+    # 这里排序是为了过 test_overlapping_special_tokens() 这个用例
+    sorted_tokens = sorted(special_tokens, key=len, reverse=True)
+    
+    special_pattern = "|".join(re.escape(token) for token in sorted_tokens)
     # 使用 capturing group (...) 来在切分结果中保留分隔符
     chunks = re.split(f'({special_pattern})', text)
     # 过滤掉 re.split 可能产生的空字符串
@@ -329,6 +332,19 @@ class BPETokenizer:
         self.vocab = vocab
         self.merges = merges
         self.special_tokens = special_tokens
+
+        if special_tokens:
+            for token_str in special_tokens:
+                token_bytes = token_str.encode('utf-8')
+                # 检查这个 special_token 是否已经存在于 vocab 中
+                if token_bytes not in self.vocab.values():
+                    # 如果不存在，就把它加进去
+                    # 1. 找到一个可用的新 ID (通常是现有最大ID + 1)
+                    new_id = max(self.vocab.keys()) + 1
+                    # 2. 更新 vocab 和反向映射
+                    self.vocab[new_id] = token_bytes
+
+
         self.PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 
         # 创建一个从 bytes 到 int 的反向映射

@@ -258,7 +258,6 @@ def test_overlapping_special_tokens():
 
     ids = tokenizer.encode(test_string)
     tokenized_string = [tokenizer.decode([x]) for x in ids]
-    print(tokenized_string)
     # Ensure the double <|endoftext|><|endoftext|> is preserved as a single token
     assert tokenized_string.count("<|endoftext|>") == 1
     assert tokenized_string.count("<|endoftext|><|endoftext|>") == 1
@@ -266,155 +265,155 @@ def test_overlapping_special_tokens():
     assert tokenizer.decode(ids) == test_string
 
 
-# def test_address_roundtrip():
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH,
-#         merges_path=MERGES_PATH,
-#     )
-#     with open(FIXTURES_PATH / "address.txt") as f:
-#         corpus_contents = f.read()
+def test_address_roundtrip():
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH,
+        merges_path=MERGES_PATH,
+    )
+    with open(FIXTURES_PATH / "address.txt") as f:
+        corpus_contents = f.read()
 
-#     ids = tokenizer.encode(corpus_contents)
-#     assert tokenizer.decode(ids) == corpus_contents
-
-
-# def test_address_matches_tiktoken():
-#     reference_tokenizer = tiktoken.get_encoding("gpt2")
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH,
-#         merges_path=MERGES_PATH,
-#     )
-#     corpus_path = FIXTURES_PATH / "address.txt"
-#     with open(corpus_path) as f:
-#         corpus_contents = f.read()
-#     reference_ids = reference_tokenizer.encode(corpus_contents)
-#     ids = tokenizer.encode(corpus_contents)
-#     assert ids == reference_ids
-
-#     assert tokenizer.decode(ids) == corpus_contents
-#     assert reference_tokenizer.decode(reference_ids) == corpus_contents
+    ids = tokenizer.encode(corpus_contents)
+    assert tokenizer.decode(ids) == corpus_contents
 
 
-# def test_german_roundtrip():
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH,
-#         merges_path=MERGES_PATH,
-#     )
-#     with open(FIXTURES_PATH / "german.txt") as f:
-#         corpus_contents = f.read()
+def test_address_matches_tiktoken():
+    reference_tokenizer = tiktoken.get_encoding("gpt2")
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH,
+        merges_path=MERGES_PATH,
+    )
+    corpus_path = FIXTURES_PATH / "address.txt"
+    with open(corpus_path) as f:
+        corpus_contents = f.read()
+    reference_ids = reference_tokenizer.encode(corpus_contents)
+    ids = tokenizer.encode(corpus_contents)
+    assert ids == reference_ids
 
-#     ids = tokenizer.encode(corpus_contents)
-#     assert tokenizer.decode(ids) == corpus_contents
-
-
-# def test_german_matches_tiktoken():
-#     reference_tokenizer = tiktoken.get_encoding("gpt2")
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH,
-#         merges_path=MERGES_PATH,
-#     )
-#     corpus_path = FIXTURES_PATH / "german.txt"
-#     with open(corpus_path) as f:
-#         corpus_contents = f.read()
-#     reference_ids = reference_tokenizer.encode(corpus_contents)
-#     ids = tokenizer.encode(corpus_contents)
-#     assert ids == reference_ids
-
-#     assert tokenizer.decode(ids) == corpus_contents
-#     assert reference_tokenizer.decode(reference_ids) == corpus_contents
+    assert tokenizer.decode(ids) == corpus_contents
+    assert reference_tokenizer.decode(reference_ids) == corpus_contents
 
 
-# def test_tinystories_sample_roundtrip():
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH,
-#         merges_path=MERGES_PATH,
-#     )
-#     with open(FIXTURES_PATH / "tinystories_sample.txt") as f:
-#         corpus_contents = f.read()
+def test_german_roundtrip():
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH,
+        merges_path=MERGES_PATH,
+    )
+    with open(FIXTURES_PATH / "german.txt") as f:
+        corpus_contents = f.read()
 
-#     ids = tokenizer.encode(corpus_contents)
-#     assert tokenizer.decode(ids) == corpus_contents
-
-
-# def test_tinystories_matches_tiktoken():
-#     reference_tokenizer = tiktoken.get_encoding("gpt2")
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH, merges_path=MERGES_PATH, special_tokens=["<|endoftext|>"]
-#     )
-#     corpus_path = FIXTURES_PATH / "tinystories_sample.txt"
-#     with open(corpus_path) as f:
-#         corpus_contents = f.read()
-#     reference_ids = reference_tokenizer.encode(corpus_contents, allowed_special={"<|endoftext|>"})
-#     ids = tokenizer.encode(corpus_contents)
-#     assert ids == reference_ids
-
-#     assert tokenizer.decode(ids) == corpus_contents
-#     assert reference_tokenizer.decode(reference_ids) == corpus_contents
+    ids = tokenizer.encode(corpus_contents)
+    assert tokenizer.decode(ids) == corpus_contents
 
 
-# def test_encode_special_token_trailing_newlines():
-#     reference_tokenizer = tiktoken.get_encoding("gpt2")
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH, merges_path=MERGES_PATH, special_tokens=["<|endoftext|>"]
-#     )
-#     corpus_path = FIXTURES_PATH / "special_token_trailing_newlines.txt"
-#     with open(corpus_path) as f:
-#         corpus_contents = f.read()
-#     reference_ids = reference_tokenizer.encode(corpus_contents, allowed_special={"<|endoftext|>"})
-#     ids = tokenizer.encode(corpus_contents)
-#     assert ids == reference_ids
+def test_german_matches_tiktoken():
+    reference_tokenizer = tiktoken.get_encoding("gpt2")
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH,
+        merges_path=MERGES_PATH,
+    )
+    corpus_path = FIXTURES_PATH / "german.txt"
+    with open(corpus_path) as f:
+        corpus_contents = f.read()
+    reference_ids = reference_tokenizer.encode(corpus_contents)
+    ids = tokenizer.encode(corpus_contents)
+    assert ids == reference_ids
 
-#     assert tokenizer.decode(ids) == corpus_contents
-#     assert reference_tokenizer.decode(reference_ids) == corpus_contents
-
-
-# def test_encode_special_token_double_newline_non_whitespace():
-#     reference_tokenizer = tiktoken.get_encoding("gpt2")
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH, merges_path=MERGES_PATH, special_tokens=["<|endoftext|>"]
-#     )
-#     corpus_path = FIXTURES_PATH / "special_token_double_newlines_non_whitespace.txt"
-#     with open(corpus_path) as f:
-#         corpus_contents = f.read()
-#     reference_ids = reference_tokenizer.encode(corpus_contents, allowed_special={"<|endoftext|>"})
-#     ids = tokenizer.encode(corpus_contents)
-#     assert ids == reference_ids
-
-#     assert tokenizer.decode(ids) == corpus_contents
-#     assert reference_tokenizer.decode(reference_ids) == corpus_contents
+    assert tokenizer.decode(ids) == corpus_contents
+    assert reference_tokenizer.decode(reference_ids) == corpus_contents
 
 
-# def test_encode_iterable_tinystories_sample_roundtrip():
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH,
-#         merges_path=MERGES_PATH,
-#     )
-#     all_ids = []
-#     with open(FIXTURES_PATH / "tinystories_sample.txt") as f:
-#         for _id in tokenizer.encode_iterable(f):
-#             all_ids.append(_id)
-#     with open(FIXTURES_PATH / "tinystories_sample.txt") as f:
-#         corpus_contents = f.read()
-#     assert tokenizer.decode(all_ids) == corpus_contents
+def test_tinystories_sample_roundtrip():
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH,
+        merges_path=MERGES_PATH,
+    )
+    with open(FIXTURES_PATH / "tinystories_sample.txt") as f:
+        corpus_contents = f.read()
+
+    ids = tokenizer.encode(corpus_contents)
+    assert tokenizer.decode(ids) == corpus_contents
 
 
-# def test_encode_iterable_tinystories_matches_tiktoken():
-#     reference_tokenizer = tiktoken.get_encoding("gpt2")
-#     tokenizer = get_tokenizer_from_vocab_merges_path(
-#         vocab_path=VOCAB_PATH, merges_path=MERGES_PATH, special_tokens=["<|endoftext|>"]
-#     )
-#     corpus_path = FIXTURES_PATH / "tinystories_sample.txt"
-#     with open(corpus_path) as f:
-#         corpus_contents = f.read()
-#     reference_ids = reference_tokenizer.encode(corpus_contents, allowed_special={"<|endoftext|>"})
-#     all_ids = []
-#     with open(FIXTURES_PATH / "tinystories_sample.txt") as f:
-#         for _id in tokenizer.encode_iterable(f):
-#             all_ids.append(_id)
-#     assert all_ids == reference_ids
+def test_tinystories_matches_tiktoken():
+    reference_tokenizer = tiktoken.get_encoding("gpt2")
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH, merges_path=MERGES_PATH, special_tokens=["<|endoftext|>"]
+    )
+    corpus_path = FIXTURES_PATH / "tinystories_sample.txt"
+    with open(corpus_path) as f:
+        corpus_contents = f.read()
+    reference_ids = reference_tokenizer.encode(corpus_contents, allowed_special={"<|endoftext|>"})
+    ids = tokenizer.encode(corpus_contents)
+    assert ids == reference_ids
 
-#     assert tokenizer.decode(all_ids) == corpus_contents
-#     assert reference_tokenizer.decode(reference_ids) == corpus_contents
+    assert tokenizer.decode(ids) == corpus_contents
+    assert reference_tokenizer.decode(reference_ids) == corpus_contents
+
+
+def test_encode_special_token_trailing_newlines():
+    reference_tokenizer = tiktoken.get_encoding("gpt2")
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH, merges_path=MERGES_PATH, special_tokens=["<|endoftext|>"]
+    )
+    corpus_path = FIXTURES_PATH / "special_token_trailing_newlines.txt"
+    with open(corpus_path) as f:
+        corpus_contents = f.read()
+    reference_ids = reference_tokenizer.encode(corpus_contents, allowed_special={"<|endoftext|>"})
+    ids = tokenizer.encode(corpus_contents)
+    assert ids == reference_ids
+
+    assert tokenizer.decode(ids) == corpus_contents
+    assert reference_tokenizer.decode(reference_ids) == corpus_contents
+
+
+def test_encode_special_token_double_newline_non_whitespace():
+    reference_tokenizer = tiktoken.get_encoding("gpt2")
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH, merges_path=MERGES_PATH, special_tokens=["<|endoftext|>"]
+    )
+    corpus_path = FIXTURES_PATH / "special_token_double_newlines_non_whitespace.txt"
+    with open(corpus_path) as f:
+        corpus_contents = f.read()
+    reference_ids = reference_tokenizer.encode(corpus_contents, allowed_special={"<|endoftext|>"})
+    ids = tokenizer.encode(corpus_contents)
+    assert ids == reference_ids
+
+    assert tokenizer.decode(ids) == corpus_contents
+    assert reference_tokenizer.decode(reference_ids) == corpus_contents
+
+
+def test_encode_iterable_tinystories_sample_roundtrip():
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH,
+        merges_path=MERGES_PATH,
+    )
+    all_ids = []
+    with open(FIXTURES_PATH / "tinystories_sample.txt") as f:
+        for _id in tokenizer.encode_iterable(f):
+            all_ids.append(_id)
+    with open(FIXTURES_PATH / "tinystories_sample.txt") as f:
+        corpus_contents = f.read()
+    assert tokenizer.decode(all_ids) == corpus_contents
+
+
+def test_encode_iterable_tinystories_matches_tiktoken():
+    reference_tokenizer = tiktoken.get_encoding("gpt2")
+    tokenizer = get_tokenizer_from_vocab_merges_path(
+        vocab_path=VOCAB_PATH, merges_path=MERGES_PATH, special_tokens=["<|endoftext|>"]
+    )
+    corpus_path = FIXTURES_PATH / "tinystories_sample.txt"
+    with open(corpus_path) as f:
+        corpus_contents = f.read()
+    reference_ids = reference_tokenizer.encode(corpus_contents, allowed_special={"<|endoftext|>"})
+    all_ids = []
+    with open(FIXTURES_PATH / "tinystories_sample.txt") as f:
+        for _id in tokenizer.encode_iterable(f):
+            all_ids.append(_id)
+    assert all_ids == reference_ids
+
+    assert tokenizer.decode(all_ids) == corpus_contents
+    assert reference_tokenizer.decode(reference_ids) == corpus_contents
 
 
 # @pytest.mark.skipif(
