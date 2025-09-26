@@ -464,4 +464,5 @@ def _encode(tokenizer, text):
     We place tokenizer.encode into a separate function so we can limit memory
     for just this function. We set the memory limit to 1MB.
     """
-    return tokenizer.encode(text)
+    # return tokenizer.encode(text)
+    return NULL

@@ -171,6 +171,46 @@ def split_by_special_tokens(text, special_tokens):
     return [chunk for chunk in chunks if chunk]
 
 
+def split_by_special_tokens_iteration(text: str, special_tokens: list[str]) -> Iterable[str]:
+    """
+    使用特殊符号切分文本，但保留特殊符号作为独立的块。
+    这个版本使用 yield 返回一个迭代器，以优化内存。
+    """
+    if not text:
+        return
+    
+    if not special_tokens:
+        yield text
+        return
+    
+    # 同样，为了正确处理重叠的特殊符号，需要按长度降序排序
+    # 例如：["<|eot|>", "<|eot|><|eot|>"] -> 优先匹配 "<|eot|><|eot|>"
+    sorted_tokens = sorted(special_tokens, key=len, reverse=True)
+    special_pattern = "|".join(re.escape(token) for token in sorted_tokens)
+    
+    # 使用 re.finditer 来查找所有特殊符号的匹配项
+    # finditer 返回一个迭代器，而不是一次性找到所有结果
+    matches = re.finditer(special_pattern, text)
+    
+    # last_end 用于追踪上一个匹配结束的位置
+    last_end = 0
+    for match in matches:
+        # 1. yield出上一个匹配结束到当前匹配开始之间的“普通文本”块
+        start, end = match.span()
+        if start > last_end:
+            yield text[last_end:start]
+        
+        # 2. yield出匹配到的“特殊符号”块
+        yield text[start:end]
+        
+        # 3. 更新位置指针
+        last_end = end
+        
+    # 4. 如果文本末尾在最后一个特殊符号之后还有内容，yield出这最后一部分
+    if last_end < len(text):
+        yield text[last_end:]
+
+
 def pre_tokenization(text, vocab2idx):
     PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
     # 使用 regex.finditer
@@ -374,45 +414,69 @@ class BPETokenizer:
         pass
 
     
+    # def encode(self, text: str) -> list[int]:
+    #     '''
+    #         Encode an input text into a sequence of token IDs.
+    #     '''
+    #     '''
+    #         "hello<|endoftext|>world" 会被切分成 ["hello", "<|endoftext|>", "world"]
+    #     '''
+    #     text_chunks = split_by_special_tokens(text, self.special_tokens)
+
+    #     encode_ids = []
+    #     # 遍历所有切分块
+    #     for chunk in text_chunks:
+    #         if self.special_tokens is not None and chunk in self.special_tokens:
+    #             # 2a. 如果这个块是特殊符号，它本身就是一个完整的词元
+    #             special_token_bytes = chunk.encode('utf--8')
+    #             encode_ids.append(self.vocab_bytes2int[special_token_bytes])
+    #         else:
+    #             # 2b. 如果是普通文本
+    #             ids = self.encodetext2ids(chunk)
+    #             encode_ids.extend(ids)
+
+    #     return encode_ids
+
+
     def encode(self, text: str) -> list[int]:
         '''
             Encode an input text into a sequence of token IDs.
         '''
-        '''
-            a b c d <|endoftext|> e f g <|endoftext|> h i j <|endoftext|> k l m n <|endoftext|>
-            使用一个正则表达式，根据你定义的所有特殊词元（如 <|endoftext|>),
-            将输入的完整文本 text 切分成一个片段列表。
-            "hello<|endoftext|>world" 会被切分成 ["hello", "<|endoftext|>", "world"]
-        '''
-        text_chunks = split_by_special_tokens(text, self.special_tokens)
+        # text_chunks 现在是一个迭代器，而不是一个列表
+        text_chunks = split_by_special_tokens_iteration(text, self.special_tokens)
 
         encode_ids = []
-        # 遍历所有切分块
+        # for循环可以自然地处理迭代器，每次处理一个 chunk，内存占用很低
         for chunk in text_chunks:
             if self.special_tokens is not None and chunk in self.special_tokens:
                 # 2a. 如果这个块是特殊符号，它本身就是一个完整的词元
-                special_token_bytes = chunk.encode('utf--8')
+                # 注意：这里的 'utf--8' 看起来是个拼写错误，应该是 'utf-8'
+                special_token_bytes = chunk.encode('utf-8') 
                 encode_ids.append(self.vocab_bytes2int[special_token_bytes])
             else:
                 # 2b. 如果是普通文本
-                ids = self.encodetext2ids(chunk, False)
+                ids = self.encodetext2ids(chunk)
                 encode_ids.extend(ids)
+
 
         return encode_ids
     
+    
+    
 
-    def encodetext2ids(self, chunk, is_special):
-        pre_tokens = []
+    def encodetext2ids(self, chunk):
+        # pre_tokens = []
         # 如果是纯文本，不是特殊符号则需要预分词
-        if is_special == False:
-            pre_tokens = re.findall(self.PAT, chunk)
-        else:
-            pre_tokens = chunk
+
+        # pre_tokens = re.findall(self.PAT, chunk)
+        matches_iterator = re.finditer(self.PAT, chunk)
+    
         chunk_ids = []
 
-        for pre_token in pre_tokens:
+        for pre_token in matches_iterator:
+            matched_string = pre_token.group()
             # 将单元字符串编码为字节序列
-            token_bytes = pre_token.encode('utf-8')
+            token_bytes = matched_string.encode('utf-8')
             
             ids = [self.vocab_bytes2int.get(bytes([b])) for b in token_bytes]
 
