@@ -444,7 +444,12 @@ class BPETokenizer:
             required for memory-efficient tokenization of large files that we cannot directly load into
             memory.
         '''
-        pass
+        for text_chunk in iterable:
+            # 2. Encode each chunk into a list of IDs
+            ids = self.encode(text_chunk)
+            # 3. Yield each ID from that list, one by one
+            for token_id in ids:
+                yield token_id
 
 
     def decode(self, ids: list[int]) -> str:
