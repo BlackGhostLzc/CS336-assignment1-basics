@@ -19,7 +19,7 @@ from cs336_basics.transformer import TransformerBlock, TransformerLM
 
 from cs336_basics.utils import softmax, cross_entropy
 
-from cs336_basics.tokenizer import train_bpe_tokenizer
+from cs336_basics.tokenizer import train_bpe_tokenizer, BPETokenizer
 
 def run_linear(
     d_in: int,
@@ -614,7 +614,7 @@ def get_tokenizer(
     Returns:
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
-    raise NotImplementedError
+    return BPETokenizer(vocab, merges, special_tokens)
 
 
 def run_train_bpe(

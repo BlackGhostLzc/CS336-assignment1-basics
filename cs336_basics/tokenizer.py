@@ -143,9 +143,6 @@ def train_bpe_tokenizer(
         # 2.更新 bytes_pair_counts 字典
         pretokens_ids, pair_counts, map_pair2index = \
             merge_and_update_counts(pretokens_ids, top_pair, map_pair2index, pair_counts, new_token_id)
-        
-        
-
 
     return (vocab, merge)
 
@@ -158,6 +155,12 @@ def split_by_special_tokens(text, special_tokens):
     """
     使用特殊符号切分文本，但保留特殊符号作为独立的块。
     """
+    if text is None:
+        return []
+    
+    if not special_tokens:
+        return [text]
+    
     special_pattern = "|".join(re.escape(token) for token in special_tokens)
     # 使用 capturing group (...) 来在切分结果中保留分隔符
     chunks = re.split(f'({special_pattern})', text)
@@ -323,7 +326,24 @@ class BPETokenizer:
             merges: list[tuple[bytes, bytes]]
             special_tokens: list[str] | None = None
         '''
-        pass
+        self.vocab = vocab
+        self.merges = merges
+        self.special_tokens = special_tokens
+        self.PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+
+        # 创建一个从 bytes 到 int 的反向映射
+        self.vocab_bytes2int = {v: k for k, v in self.vocab.items()}
+
+        # 这是一个合并的顺序排名
+        self.bpe_ranks = {}
+        for i, (p1, p2) in enumerate(merges):
+            # 找到两个字节对应的 ID
+            id1 = self.vocab_bytes2int[p1]
+            id2 = self.vocab_bytes2int[p2]
+            
+            # 将 (ID对) 映射到它们的排名 i
+            # 列表中的索引 i 越小，优先级越高
+            self.bpe_ranks[(id1, id2)] = i
 
 
     def from_files(cls, vocab_filepath, merges_filepath, special_tokens=None): 
@@ -342,7 +362,64 @@ class BPETokenizer:
         '''
             Encode an input text into a sequence of token IDs.
         '''
-        pass
+        '''
+            a b c d <|endoftext|> e f g <|endoftext|> h i j <|endoftext|> k l m n <|endoftext|>
+            使用一个正则表达式，根据你定义的所有特殊词元（如 <|endoftext|>),
+            将输入的完整文本 text 切分成一个片段列表。
+            "hello<|endoftext|>world" 会被切分成 ["hello", "<|endoftext|>", "world"]
+        '''
+        text_chunks = split_by_special_tokens(text, self.special_tokens)
+
+        encode_ids = []
+        # 遍历所有切分块
+        for chunk in text_chunks:
+            if self.special_tokens is not None and chunk in self.special_tokens:
+                # 2a. 如果这个块是特殊符号，它本身就是一个完整的词元
+                special_token_bytes = chunk.encode('utf--8')
+                encode_ids.append(self.vocab_bytes2int[special_token_bytes])
+            else:
+                # 2b. 如果是普通文本
+                ids = self.encodetext2ids(chunk, False)
+                encode_ids.extend(ids)
+
+        return encode_ids
+    
+
+    def encodetext2ids(self, chunk, is_special):
+        pre_tokens = []
+        # 如果是纯文本，不是特殊符号则需要预分词
+        if is_special == False:
+            pre_tokens = re.findall(self.PAT, chunk)
+        else:
+            pre_tokens = chunk
+        chunk_ids = []
+
+        for pre_token in pre_tokens:
+            # 将单元字符串编码为字节序列
+            token_bytes = pre_token.encode('utf-8')
+            
+            ids = [self.vocab_bytes2int.get(bytes([b])) for b in token_bytes]
+
+            while len(ids) > 1:
+                pairs = list(zip(ids, ids[1:]))
+
+                best_pair_to_merge = min(pairs, key=lambda p: self.bpe_ranks.get(p, float('inf')))
+                if self.bpe_ranks.get(best_pair_to_merge) is None:
+                    break
+                
+                id1, id2 = best_pair_to_merge
+
+                for i in range(len(ids) - 1):
+                    if ids[i] == id1 and ids[i+1] == id2:
+                        new_bytes = self.vocab[id1] + self.vocab[id2]
+                        new_id = self.vocab_bytes2int[new_bytes]
+                        ids = ids[:i] + [new_id] + ids[i+2:]
+                        break
+            
+            chunk_ids.extend(ids)
+        
+        return chunk_ids
+        
 
 
     def encode_iterable(self, iterable: Iterable[str]) -> Iterator[int]:
@@ -358,4 +435,12 @@ class BPETokenizer:
         '''
             Decode a sequence of token IDs into text.
         '''
-        pass
+        token_bytes = [self.vocab.get(id, b'') for id in ids]
+        full_byte_sequence = b"".join(token_bytes)
+        text = full_byte_sequence.decode('utf-8', errors='replace')
+
+        '''
+            text = ['Hello', ',', ' how', ' ', '<|endoftext|>', '<|endoftext|>', ' are', ' you', '?', '<|endoftext|>']
+        '''
+
+        return text
