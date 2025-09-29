@@ -17,11 +17,13 @@ from cs336_basics.rope import Rope
 from cs336_basics.rmsnorm import RMSNorm
 from cs336_basics.transformer import TransformerBlock, TransformerLM
 
-from cs336_basics.utils import softmax, cross_entropy
+from cs336_basics.utils import softmax, cross_entropy, save_checkpoint, load_checkpoint
 
 from cs336_basics.tokenizer import train_bpe_tokenizer, BPETokenizer
 
 from cs336_basics.optimizer import AdamW, get_lr_cosine_schedule, gradient_clipping
+
+from cs336_basics.loader import get_batch
 
 def run_linear(
     d_in: int,
@@ -333,7 +335,8 @@ def run_transformer_lm(
     weights: dict[str, Tensor],
     in_indices: Int[Tensor, " batch_size sequence_length"],
 ) -> Float[Tensor, " batch_size sequence_length vocab_size"]:
-    """Given the weights of a Transformer language model and input indices,
+    '''
+    Given the weights of a Transformer language model and input indices,
     return the output of running a forward pass on the input indices.
 
     This function should use RoPE.
@@ -400,7 +403,7 @@ def run_transformer_lm(
     Returns:
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
-    """
+    '''
     model = TransformerLM(vocab_size, context_length, d_model, num_layers,
                           num_heads, d_ff, rope_theta)
     model.init_weights(weights)
@@ -470,7 +473,7 @@ def run_get_batch(
         is the sampled input sequences, and the second tuple item is the corresponding
         language modeling labels.
     """
-    raise NotImplementedError
+    return get_batch(dataset, batch_size, context_length, device)
 
 
 def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, " ..."]:
@@ -572,7 +575,7 @@ def run_save_checkpoint(
             we've completed.
         out (str | os.PathLike | BinaryIO | IO[bytes]): Path or file-like object to serialize the model, optimizer, and iteration to.
     """
-    raise NotImplementedError
+    save_checkpoint(model, optimizer, iteration, out)
 
 
 def run_load_checkpoint(
@@ -593,7 +596,7 @@ def run_load_checkpoint(
     Returns:
         int: the previously-serialized number of iterations.
     """
-    raise NotImplementedError
+    return load_checkpoint(src, model, optimizer)
 
 
 def get_tokenizer(
