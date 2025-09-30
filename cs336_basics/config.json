@@ -1,0 +1,29 @@
+
+{
+  "model": {
+    "vocab_size": 10000,
+    "context_length": 256,
+    "d_model": 512,
+    "num_layers": 4,
+    "num_heads": 16,
+    "d_ff": 1344,
+    "rope_theta": 10000.0
+  },
+
+
+
+  "optimizer": {
+    "betas": [0.9, 0.999],
+    "eps": 1e-8,
+    "weight_decay": 0.01,
+    "amsgrad": false,
+
+    "lr": 0.0002,
+    "min_lr": 0.00001,
+    "warmup_iters": 500,
+    "cosine_iters": 10000,
+    "clip_grad_norm": 1.0
+  }
+
+
+}

@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from jaxtyping import Bool, Float, Int
+
+
 from .linear import Linear
 from .attention import *
 from .rmsnorm import RMSNorm
@@ -61,7 +63,7 @@ class TransformerLM(nn.Module):
         self.layers = nn.ModuleList()
         self.num_layers = num_layers
         for _ in range(num_layers):
-            block = TransformerBlock(d_model, num_heads, d_ff, context_length,rope_theta)
+            block = TransformerBlock(d_model, num_heads, d_ff, context_length, rope_theta)
             self.layers.append(block)
 
         self.ln_final = RMSNorm(d_model)

@@ -3,6 +3,7 @@ from typing import BinaryIO, Iterator, Iterable
 import regex as re
 import multiprocessing
 from collections import defaultdict
+from tqdm import tqdm
 
 
 def display_file_info(file: BinaryIO):
@@ -83,6 +84,7 @@ def train_bpe_tokenizer(
 
     pair_counts: dict[tuple[int, int], int] = {} 
 
+
     processed_chunk_number = 0
     process_started_num = len(boundaries) - 1
 
@@ -97,12 +99,13 @@ def train_bpe_tokenizer(
         这样的话在进行merge的时候能快速地修改每一个pair的位置(pair_counts),减少遍历量
     '''
     map_pair2index: dict[tuple[int, int], set] = defaultdict(set)
-
+    print("master get the pre-tokens...")
     while processed_chunk_number < process_started_num :
         # [[1,2..], [3,4..] ...]
         text_ids = chunk_task_queue.get()
         processed_chunk_number += 1
-
+        print(text_ids[:10])
+        print("master begin a queue...")
         # text = [], 对text[i]单独进行词元内的计数和merge，计数到counts中, text[i] 是预分词后的一个字节流
         for ids in text_ids:
             # 首先还需要对t进行 encode
@@ -113,14 +116,19 @@ def train_bpe_tokenizer(
                 pair_counts[pair_key] = pair_counts.get(pair_key, 0) + 1
                 map_pair2index[(pair[0], pair[1])].add(index)
 
+        print("master end a queue...")
+
+
     for p in processes:
         p.join()
 
 
-    # display_pair_count(bytes_pair_counts)
+    print("begin merge")
 
+    # display_pair_count(bytes_pair_counts)
+    pbar = tqdm(range(merge_epoch), desc="Training BPE Merges")
     # 计算好了所有的pair对的计数，然后就开始记录需要添加哪个到词汇表，然后再做出merge
-    for i in range(merge_epoch):
+    for i in pbar:
         # 1.找出最大的 pair 对
         top_pair = find_top_pair(pair_counts, vocab)
         
@@ -245,7 +253,7 @@ def worker(text, vocab2idx, queue: multiprocessing.Queue, special_tokens: list[s
         其中"abcd...."需要进行预分词
     '''
     text_chunks = split_by_special_tokens(text, special_tokens)
-    
+    print("worker split_by_special_tokens finished")
     # 2. 遍历所有切分块
     for chunk in text_chunks:
         if chunk in special_tokens:
@@ -260,6 +268,7 @@ def worker(text, vocab2idx, queue: multiprocessing.Queue, special_tokens: list[s
             all_pretoken_ids.extend(pretoken_ids_list)
             
     # 3. 将最终处理好的、结构正确的ID列表放入队列
+    print("worker finished")
     queue.put(all_pretoken_ids)
 
 
@@ -369,7 +378,6 @@ def find_chunk_boundaries(
 
     # Make sure all boundaries are unique, but might be fewer than desired_num_chunks
     return sorted(set(chunk_boundaries))
-
 
 
 
@@ -539,3 +547,4 @@ class BPETokenizer:
         '''
 
         return text
+    

@@ -28,7 +28,6 @@ def cross_entropy(logits, targets):
 
     # 找出每一行的最大值
     max_val = torch.max(logits, dim=-1, keepdim=True).values    # [batch_size, 1]
-    print(max_val.shape)
 
     # 找到targets对应的 logits
     selected_logits = logits[torch.arange(batch_size), targets]

@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from jaxtyping import Bool, Float, Int
-from .linear import Linear
+
 import math
 
 from .rope import Rope
-
+from .linear import Linear
 
 def scaled_dot_product_attention(Q, K, V, mask):
     '''
