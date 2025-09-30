@@ -5,6 +5,7 @@ import sys
 import os
 import numpy as np
 from tqdm import tqdm
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # --- 添加结束 ---
@@ -13,6 +14,8 @@ from cs336_basics.model.transformer import TransformerLM
 from cs336_basics.model.optimizer import AdamW, get_lr_cosine_schedule, gradient_clipping
 from cs336_basics.model.utils import save_checkpoint, load_checkpoint, cross_entropy
 
+DATA_DIR = Path(__file__).resolve().parent.parent / 'data' 
+CHECKPOINT_DIR = Path(__file__).resolve().parent.parent / 'checkpoint' 
 
 def get_args():
     """解析命令行参数"""
@@ -25,7 +28,7 @@ def get_args():
     parser.add_argument('--iterations', type=int, default=6000, help='train model iterations')
     parser.add_argument('--save_interations', type=int, default=500, help='save model interval')
     parser.add_argument('--validate_interations', type=int, default=100, help='save model interval')
-    parser.add_argument('--dataset', type=str, default='/home/lzc/dataset')
+    parser.add_argument('--dataset', type=str, default='/home/lzc/assignment1-basics/data')
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--context_length', type=int, default=256)
 
@@ -71,9 +74,8 @@ def main():
     optimizer = AdamW(model.parameters(), **optimizer_params)
 
     # 数据集
-    dataset_path = args.dataset
-    train_dataset = get_memmap_dataset(os.path.join(dataset_path, "train.bin"))
-    valid_dataset = get_memmap_dataset(os.path.join(dataset_path, "valid.bin"))
+    train_dataset = get_memmap_dataset(os.path.join(DATA_DIR, "train.bin"))
+    valid_dataset = get_memmap_dataset(os.path.join(DATA_DIR, "valid.bin"))
 
     
     # load 模型
@@ -143,3 +145,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

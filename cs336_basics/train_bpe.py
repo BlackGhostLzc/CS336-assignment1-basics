@@ -78,6 +78,54 @@ def save_tokenizer_to_vocab_merges_path(
 
 
 
+
+def load_tokenizer_from_vocab_merges_path(
+    vocab_path: str | os.PathLike,
+    merges_path: str | os.PathLike,
+) -> tuple[Dict[int, bytes], List[Tuple[bytes, bytes]]]:
+    """
+    Loads a vocab and merges list from disk in the GPT-2 format.
+    This is the inverse operation of save_tokenizer_to_vocab_merges_path.
+    """
+    # --- 1. Create the reverse mapping from unicode characters back to bytes ---
+    gpt2_unicode_encoder = gpt2_bytes_to_unicode()
+    gpt2_unicode_decoder = {v: k for k, v in gpt2_unicode_encoder.items()}
+
+    # --- 2. Load and process the vocabulary ---
+    print(f"Loading vocabulary from {vocab_path}")
+    with open(vocab_path, "r", encoding="utf-8") as f:
+        loaded_vocab = json.load(f)
+    
+    vocab = {}
+    for gpt2_token, token_id in loaded_vocab.items():
+        # Convert the GPT-2 unicode string back into its original byte sequence
+        byte_sequence = bytes([gpt2_unicode_decoder[char] for char in gpt2_token])
+        vocab[token_id] = byte_sequence
+
+    # --- 3. Load and process the merges ---
+    print(f"Loading merges from {merges_path}")
+    merges = []
+    with open(merges_path, "r", encoding="utf-8") as f:
+        # Skip the first line which is typically a version comment (e.g., "#version: 0.2")
+        next(f)
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Split the line into the two parts of the merge rule
+            gpt2_token1, gpt2_token2 = line.split(" ")
+            
+            # Convert each part back to its byte representation
+            token1_bytes = bytes([gpt2_unicode_decoder[char] for char in gpt2_token1])
+            token2_bytes = bytes([gpt2_unicode_decoder[char] for char in gpt2_token2])
+            
+            merges.append((token1_bytes, token2_bytes))
+            
+    return vocab, merges
+
+
+
 def train_bpe_tokenizer1(
     input_path: str | os.PathLike,
     vocab_size: int,
@@ -172,34 +220,38 @@ def encode_text2ids(tokenizer, text_path: str | os.PathLike, bin_path: str | os.
         ids = []
         for _id in _encode_iterable(tokenizer, f):
             ids.append(_id)
-
     arr = np.array(ids, dtype=np.int32)
-    
-    # 3. Write the raw binary data of the array to the specified .bin file
+
     arr.tofile(bin_path)
 
 
 
-def main():
+def train_bpe():
     # vocab, merges = train_bpe_tokenizer(input_path=valid_text_path, \
     #                                     vocab_size=10000, special_tokens=["<|endoftext|>"])
     
     vocab, merges = train_bpe_tokenizer1(input_path=train_text_path, \
                                         vocab_size=10000, special_tokens=["<|endoftext|>"])
-    tokenizer = BPETokenizer(vocab, merges, special_tokens=["<|endoftext|>"])
 
-    # 把文本文件转成 vocab id 并序列化进磁盘
-    # encode_text2ids(tokenizer, train_text_path, train_bin_path)
-    # encode_text2ids(tokenizer, valid_text_path, valid_bin_path)
     
     # 还需要把 vocab, merges 写入磁盘文件
     save_tokenizer_to_vocab_merges_path(vocab, merges, vocab_path, merges_path)
 
 
 
-if __name__ == '__main__':
-    main()
+def process_dataset():
+    vocab, merges = load_tokenizer_from_vocab_merges_path(vocab_path, merges_path)
+    tokenizer = BPETokenizer(vocab, merges, special_tokens=["<|endoftext|>"])
+    # 把文本文件转成 vocab id 并序列化进磁盘
+    encode_text2ids(tokenizer, train_text_path, train_bin_path)
+    # encode_text2ids(tokenizer, valid_text_path, valid_bin_path)
 
+
+
+
+if __name__ == '__main__':
+    #train_bpe()
+    process_dataset()
 
 
 
