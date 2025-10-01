@@ -13,7 +13,8 @@ class RMSNorm(nn.Module):
         # eps 加到分母上防止除 0, 稳定性
         self.eps = eps
 
-        self.weight = nn.Parameter(torch.randn(self.d_model))
+        # self.weight = nn.Parameter(torch.randn(self.d_model))
+        self.weight = nn.Parameter(torch.ones(self.d_model))
 
 
     def forward(self, x):

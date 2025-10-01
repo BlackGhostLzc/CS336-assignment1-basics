@@ -9,21 +9,21 @@ import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
 
-from cs336_basics.linear import Linear
-from cs336_basics.embedding import Embedding
-from cs336_basics.activations import Swiglu, Silu
-from cs336_basics.attention import scaled_dot_product_attention, MultiHeadSelfAttention
-from cs336_basics.rope import Rope
-from cs336_basics.rmsnorm import RMSNorm
-from cs336_basics.transformer import TransformerBlock, TransformerLM
+from cs336_basics.model.linear import Linear
+from cs336_basics.model.embedding import Embedding
+from cs336_basics.model.activations import Swiglu, Silu
+from cs336_basics.model.attention import scaled_dot_product_attention, MultiHeadSelfAttention
+from cs336_basics.model.rope import Rope
+from cs336_basics.model.rmsnorm import RMSNorm
+from cs336_basics.model.transformer import TransformerBlock, TransformerLM
 
-from cs336_basics.utils import softmax, cross_entropy, save_checkpoint, load_checkpoint
+from cs336_basics.model.utils import softmax, cross_entropy, save_checkpoint, load_checkpoint
 
-from cs336_basics.tokenizer import train_bpe_tokenizer, BPETokenizer
+from cs336_basics.model.tokenizer import train_bpe_tokenizer, BPETokenizer
 
-from cs336_basics.optimizer import AdamW, get_lr_cosine_schedule, gradient_clipping
+from cs336_basics.model.optimizer import AdamW, get_lr_cosine_schedule, gradient_clipping
 
-from cs336_basics.loader import get_batch
+from cs336_basics.model.loader import get_batch
 
 def run_linear(
     d_in: int,

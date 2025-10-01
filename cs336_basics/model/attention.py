@@ -69,7 +69,7 @@ class MultiHeadSelfAttention(nn.Module):
         q_proj = q_proj.transpose(-2, -3)   # [.... , num_heads, seq_len, d]
         k_proj = k_proj.transpose(-2, -3)   # [.... , num_heads, seq_len, d]
         v_proj = v_proj.transpose(-2, -3)   # [.... , num_heads, seq_len, d]
-        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
+        mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()
 
         if self.use_rope == True:
             q_proj = self.rope(q_proj, self.token_positions)
