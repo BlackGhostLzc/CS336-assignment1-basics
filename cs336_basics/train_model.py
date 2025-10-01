@@ -26,13 +26,13 @@ def get_args():
     parser.add_argument('--config', type=str, default='/home/lzc/assignment1-basics/cs336_basics/config.json', help='config file')
     parser.add_argument('--load', type=bool, default=False, help='load model from checkpoint')
 
-    parser.add_argument('--iterations', type=int, default=40000, help='train model iterations')
+    parser.add_argument('--iterations', type=int, default=80000, help='train model iterations')
     parser.add_argument('--save_interations', type=int, default=500, help='save model interval')
-    parser.add_argument('--validate_interations', type=int, default=5000, help='save model interval')
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--validate_interations', type=int, default=20000, help='save model interval')
+    parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--context_length', type=int, default=256)
 
-    parser.add_argument('--display_loss_iteration', type=int, default=1000)
+    parser.add_argument('--display_loss_iteration', type=int, default=2000)
 
     return parser.parse_args()
 
@@ -45,7 +45,7 @@ def get_memmap_dataset(path, dtype=np.int32):
 def memmap_val_iterator(memmap_arr, batch_size, context_length):
     N = len(memmap_arr)
     nb = (N-context_length-1)//batch_size
-    for bi in range(nb // 20):
+    for bi in range(nb // 10):
         base = bi*batch_size
         x = np.stack([memmap_arr[i:i+context_length] for i in range(base, base+batch_size)])
         y = np.stack([memmap_arr[i+1:i+context_length+1] for i in range(base, base+batch_size)])
@@ -140,14 +140,8 @@ def main():
             model.eval()
             with torch.no_grad():
                 val_losses = []
-
-                N = len(valid_dataset)
-                nb = (N - args.context_length - 1) // args.batch_size // 100
-
-                val_iterator = memmap_val_iterator(valid_dataset, args.batch_size, args.context_length)
-                progress_bar = tqdm(val_iterator, total=nb, desc="Validating", leave=False)
                 
-                for x_val, y_val in progress_bar:
+                for x_val, y_val in memmap_val_iterator(valid_dataset, args.batch_size, args.context_length):
                     x_val, y_val = x_val.to(device), y_val.to(device)
                     val_logits = model(x_val)
                     val_loss = cross_entropy(
